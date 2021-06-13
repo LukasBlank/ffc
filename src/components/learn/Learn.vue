@@ -1,9 +1,11 @@
 <template>
-  <div class="learn" v-if="numberOfSelectedDecks>0">
+  <div class="learn" v-if="numberOfSelectedDecks > 0">
     <!-- v-if="numberOfSelectedDecks>0"; otherwise it will be shortly displayed before it is catched by beforeMount -->
     <div class="max-height">{{ curLearningElement.card.q }}</div>
     <div class="max-height">
-      <span v-if="curLearningElement.showAnswer">{{ curLearningElement.card.a }}</span>
+      <span v-if="curLearningElement.showAnswer">{{
+        curLearningElement.card.a
+      }}</span>
       <v-btn v-else @click="revealAnswer">Reveal Answer</v-btn>
     </div>
 
@@ -16,54 +18,61 @@
     <v-card-actions>
       <v-btn
         text
-        :disabled="learningSessionManager.learningSession.currentElementIndex === 0"
+        :disabled="
+          learningSessionManager.learningSession.currentElementIndex === 0
+        "
         color="grey lighten-1"
         @click="moveToPrev"
-      >Previous</v-btn>
+        >Previous</v-btn
+      >
       <v-spacer></v-spacer>
-      <v-btn text :color="buttonNext.color" @click="moveToNext">{{buttonNext.text}}</v-btn>
+      <v-btn text :color="buttonNext.color" @click="moveToNext">{{
+        buttonNext.text
+      }}</v-btn>
     </v-card-actions>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
+import Vue from 'vue'
+import Component from 'vue-class-component'
 
-import Rating from "./Rating.vue";
+import Rating from './Rating.vue'
 import {
   Deck,
   LearningSessionElement,
   Event,
-  CustomDialogOptionsBarChartBar
-} from "../../types";
-import LearningSessionManager from "../../helpers/learningSessionManager";
-import FollowUpLearningSessionManager from "../../helpers/followUpLearningSessionManager";
+  CustomDialogOptionsBarChartBar,
+} from '../../types'
+import LearningSessionManager from '../../helpers/learningSessionManager'
+import FollowUpLearningSessionManager from '../../helpers/followUpLearningSessionManager'
 
-import { finishLearningDialog } from "../../helpers/finishLearningDialogHelper";
-import { quitLearningDialog } from "../../helpers/quitLearningDialogHelper";
+import { finishLearningDialog } from '../../helpers/finishLearningDialogHelper'
+import { quitLearningDialog } from '../../helpers/quitLearningDialogHelper'
 import {
   saveLearningSessionManagerDataToLocalStorage,
-  getLearningSessionManagerDataFromLocalStorage
-} from "../../helpers/learningSessionStorageHelper";
+  getLearningSessionManagerDataFromLocalStorage,
+} from '../../helpers/learningSessionStorageHelper'
+import { addPoints } from '../../helpers/studyGroupHelper'
 
 const LearnProps = Vue.extend({
   props: {
     decks: { type: Array as () => Deck[] },
     numberOfSelectedDecks: Number,
-    cardLimit: String
-  }
-});
+    cardLimit: String,
+    groupID: String,
+  },
+})
 
 @Component({
   components: {
-    Rating
-  }
+    Rating,
+  },
 })
 export default class Learn extends LearnProps {
-  numberOfStarsInRating = 5;
-  learningSessionManager = new LearningSessionManager([]);
-  isLearningSessionFinishedAndComponentWillBeDestroyedSoon = false;
+  numberOfStarsInRating = 5
+  learningSessionManager = new LearningSessionManager([])
+  isLearningSessionFinishedAndComponentWillBeDestroyedSoon = false
   curLearningElement = {
     deckId: 0,
     cardId: 0,
@@ -71,69 +80,69 @@ export default class Learn extends LearnProps {
     rating: {},
     card: {
       id: 0,
-      q: "",
-      a: ""
-    }
-  } as LearningSessionElement;
+      q: '',
+      a: '',
+    },
+  } as LearningSessionElement
 
   $refs!: {
-    rating: Rating;
-  };
+    rating: Rating
+  }
 
   created() {
-    this.isLearningSessionFinishedAndComponentWillBeDestroyedSoon = false;
+    this.isLearningSessionFinishedAndComponentWillBeDestroyedSoon = false
     this.$eventHub.$on(Event.SWIPE_LEFT_IN_LEARN, () => {
-      this.moveToNext();
-    });
+      this.moveToNext()
+    })
     this.$eventHub.$on(Event.SWIPE_RIGHT_IN_LEARN, () => {
-      this.moveToPrev();
-    });
+      this.moveToPrev()
+    })
     this.$eventHub.$on(Event.PREPARE_QUIT_LEARNING, () => {
-      this.quitLearning();
-    });
+      this.quitLearning()
+    })
   }
   destroyed() {
-    this.$eventHub.$off(Event.SWIPE_LEFT_IN_LEARN);
-    this.$eventHub.$off(Event.SWIPE_RIGHT_IN_LEARN);
-    this.$eventHub.$off(Event.PREPARE_QUIT_LEARNING);
+    this.$eventHub.$off(Event.SWIPE_LEFT_IN_LEARN)
+    this.$eventHub.$off(Event.SWIPE_RIGHT_IN_LEARN)
+    this.$eventHub.$off(Event.PREPARE_QUIT_LEARNING)
   }
 
   updateCurLearningElement() {
-    if (this.isLearningSessionFinishedAndComponentWillBeDestroyedSoon) return;
-    this.curLearningElement = this.learningSessionManager.getCurrentLearningSessionElementWithCardDetails();
-    this.updateRatingForCurrentLearningElement();
-    saveLearningSessionManagerDataToLocalStorage(this.learningSessionManager);
+    if (this.isLearningSessionFinishedAndComponentWillBeDestroyedSoon) return
+    this.curLearningElement = this.learningSessionManager.getCurrentLearningSessionElementWithCardDetails()
+    this.updateRatingForCurrentLearningElement()
+    saveLearningSessionManagerDataToLocalStorage(this.learningSessionManager)
   }
 
   updateRatingForCurrentLearningElement() {
-    let r = 0;
+    let r = 0
     if (this.curLearningElement.rating?.r !== undefined) {
-      r = this.mapRatingFrom100ToStars(this.curLearningElement.rating.r);
+      r = this.mapRatingFrom100ToStars(this.curLearningElement.rating.r)
     }
     // rating component is not mounted yet due to re-rendering
     this.$nextTick(() => {
       if (this.$refs.rating) {
-        this.$refs.rating.setRating(r);
+        this.$refs.rating.setRating(r)
       }
-    });
+    })
   }
 
   beforeMount() {
-    const learningSessionManagerDataInLocalStorage = getLearningSessionManagerDataFromLocalStorage();
+    const learningSessionManagerDataInLocalStorage = getLearningSessionManagerDataFromLocalStorage()
     if (learningSessionManagerDataInLocalStorage) {
       this.learningSessionManager = new FollowUpLearningSessionManager(
         learningSessionManagerDataInLocalStorage
-      );
+      )
     } else {
       if (this.numberOfSelectedDecks === 0) {
-        this.$router.replace("/");
-        return;
+        this.$router.replace('/')
+        return
       }
       this.learningSessionManager = new LearningSessionManager(
-        this.decks.filter(deck => deck.selected)
-      );
+        this.decks.filter((deck) => deck.selected)
+      )
     }
-    this.updateCurLearningElement();
+    this.updateCurLearningElement()
   }
 
   checkIfCardIsEndOfSession(): boolean {
@@ -141,97 +150,117 @@ export default class Learn extends LearnProps {
       (this.learningSessionManager.learningSession.currentElementIndex ===
         this.learningSessionManager.learningSession.elements.length - 1 &&
         this.learningSessionManager.cardsToSelectFrom.length === 0) ||
-      (this.cardLimit === "0"
+      (this.cardLimit === '0'
         ? false
         : this.learningSessionManager.learningSession.currentElementIndex ===
-          parseInt(this.cardLimit) - 1);
-    return endOfSession;
+          parseInt(this.cardLimit) - 1)
+    return endOfSession
   }
 
   moveToNext() {
     if (this.checkIfCardIsEndOfSession()) {
-      this.finishSession();
+      this.finishSession()
     }
-    this.learningSessionManager.moveToNextLearningSessionElement();
+    this.learningSessionManager.moveToNextLearningSessionElement()
   }
 
   get buttonNext(): { text: string; color: string } {
     if (this.checkIfCardIsEndOfSession()) {
       return {
-        text: "Finish",
-        color: "indigo lighten-1"
-      };
+        text: 'Finish',
+        color: 'indigo lighten-1',
+      }
     } else {
       return {
-        text: "Next",
-        color: "grey lighten-1"
-      };
+        text: 'Next',
+        color: 'grey lighten-1',
+      }
     }
   }
 
   moveToPrev() {
-    this.learningSessionManager.moveToPrevLearningSessionElement();
+    this.learningSessionManager.moveToPrevLearningSessionElement()
   }
 
-  revealAnswer() {
-    this.learningSessionManager.revealAnswerForCurrentLearningSessionElement();
+  async revealAnswer() {
+    this.learningSessionManager.revealAnswerForCurrentLearningSessionElement()
+    if (this.groupID) await addPoints(this.groupID, 2)
   }
 
   onRating(rating: number, programmatically = false) {
-    if (programmatically) return;
-    const r = this.mapRatingFromStarsTo100(rating);
-    this.learningSessionManager.saveRatingForCurrentLearningSessionElement(r);
-    saveLearningSessionManagerDataToLocalStorage(this.learningSessionManager);
+    if (programmatically) return
+    const r = this.mapRatingFromStarsTo100(rating)
+    this.learningSessionManager.saveRatingForCurrentLearningSessionElement(r)
+    saveLearningSessionManagerDataToLocalStorage(this.learningSessionManager)
   }
 
   mapRatingFromStarsTo100(rating: number): number {
     // map 1-n -> 0-100
-    return ((rating - 1) * 100) / (this.numberOfStarsInRating - 1);
+    return ((rating - 1) * 100) / (this.numberOfStarsInRating - 1)
   }
   mapRatingFrom100ToStars(rating: number): number {
     // map 0-100 -> 1-n
-    return (rating * (this.numberOfStarsInRating - 1)) / 100 + 1;
+    return (rating * (this.numberOfStarsInRating - 1)) / 100 + 1
   }
 
   finishSession() {
-    finishLearningDialog(this, this.getBarsForFinishLearningDialog(), () => {
-      this.isLearningSessionFinishedAndComponentWillBeDestroyedSoon = true;
-    });
+    const stars: number = this.getStarsAsPoints()
+    finishLearningDialog(
+      this,
+      this.getBarsForFinishLearningDialog(),
+      () => {
+        this.isLearningSessionFinishedAndComponentWillBeDestroyedSoon = true
+      },
+      this.groupID,
+      stars
+    )
   }
 
   getBarsForFinishLearningDialog(): CustomDialogOptionsBarChartBar[] {
-    const bars = [];
+    const bars = []
     for (let rating = 1; rating <= this.numberOfStarsInRating; rating++) {
-      bars.push({ name: `${rating}`, value: 0 });
+      bars.push({ name: `${rating}`, value: 0 })
     }
     for (const element of this.learningSessionManager.learningSession
       .elements) {
       if (element.rating?.r !== undefined) {
-        bars[this.mapRatingFrom100ToStars(element.rating.r) - 1].value += 1;
+        bars[this.mapRatingFrom100ToStars(element.rating.r) - 1].value += 1
       }
     }
-    return bars;
+    return bars
   }
 
   quitLearning() {
-    quitLearningDialog(this, this.getBarsForFinishLearningDialog());
+    const stars: number = this.getStarsAsPoints()
+    quitLearningDialog(
+      this,
+      this.getBarsForFinishLearningDialog(),
+      this.groupID,
+      stars
+    )
+  }
+
+  getStarsAsPoints(): number {
+    return this.learningSessionManager.learningSession.elements
+      .map((e) => e.rating?.r || 0)
+      .reduce((pv, cv) => pv + Math.round(cv / 25 + 1), 0)
   }
 
   updateVerticalCentering() {
-    for (const el of document.getElementsByClassName("max-height")) {
+    for (const el of document.getElementsByClassName('max-height')) {
       if (el.scrollHeight > el.clientHeight) {
-        el.classList.remove("flex-center");
+        el.classList.remove('flex-center')
       } else {
-        el.classList.add("flex-center");
+        el.classList.add('flex-center')
       }
     }
   }
   mounted() {
-    this.updateVerticalCentering();
+    this.updateVerticalCentering()
   }
   updated() {
-    this.updateVerticalCentering();
-    this.updateCurLearningElement();
+    this.updateVerticalCentering()
+    this.updateCurLearningElement()
   }
 }
 </script>

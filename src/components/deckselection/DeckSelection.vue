@@ -3,12 +3,20 @@
     <v-subheader>Decks</v-subheader>
     <v-list v-if="decks.length > 0">
       <v-list-item-group multiple color="indigo" v-model="deckModel">
-        <v-list-item v-for="deck in decks" :key="deck.id" :value="deck.id" :id="deck.id">
+        <v-list-item
+          v-for="deck in decks"
+          :key="deck.id"
+          :value="deck.id"
+          :id="deck.id"
+        >
           <v-list-item-content>
             <v-list-item-title v-text="deck.name"></v-list-item-title>
           </v-list-item-content>
           <v-list-item-icon
-            :class="{ hidden: numberOfSelectedDecks===0, visible: numberOfSelectedDecks>0 }"
+            :class="{
+              hidden: numberOfSelectedDecks === 0,
+              visible: numberOfSelectedDecks > 0,
+            }"
           >
             <v-icon v-if="deck.selected">mdi-check-box-outline</v-icon>
             <v-icon v-else>mdi-checkbox-blank-outline</v-icon>
@@ -17,10 +25,11 @@
       </v-list-item-group>
     </v-list>
     <p v-else id="no-decks-yet-notice">
-      You don't have any decks yet.
-      You might want to add some by clicking on the button in the bottom right corner.
+      You don't have any decks yet. You might want to add some by clicking on
+      the button in the bottom right corner.
     </p>
     <v-btn
+      v-if="!studyGroup"
       class="mx-2"
       id="btn-fixed-bottom-right-corner"
       fab
@@ -37,43 +46,44 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
+import Vue from 'vue'
+import Component from 'vue-class-component'
 
-import { Deck } from "../../types";
+import { Deck } from '../../types'
 
 const DeckSelectionProps = Vue.extend({
   props: {
     decks: { type: Array as () => Deck[] },
-    numberOfSelectedDecks: Number
-  }
-});
+    numberOfSelectedDecks: Number,
+    studyGroup: Boolean,
+  },
+})
 
 @Component
 export default class DeckSelection extends DeckSelectionProps {
   get deckModel() {
     return this.decks
-      .map(deck => (deck.selected ? deck.id : undefined))
-      .filter(id => id !== undefined);
+      .map((deck) => (deck.selected ? deck.id : undefined))
+      .filter((id) => id !== undefined)
   }
   set deckModel(newModel) {
-    this.decks.forEach(deck => {
-      deck.selected = newModel.includes(deck.id);
-    });
+    this.decks.forEach((deck) => {
+      deck.selected = newModel.includes(deck.id)
+    })
   }
 
   get selectedDeck() {
     return this.deckModel.length !== 1
       ? null
-      : this.decks.find(deck => deck.id === this.deckModel[0]);
+      : this.decks.find((deck) => deck.id === this.deckModel[0])
   }
 
   onButtonClick() {
     if (this.numberOfSelectedDecks === 0) {
-      this.$router.push("add");
+      this.$router.push('add')
     } else {
       // start learning with selected decks
-      this.$router.push("learn");
+      this.$router.push('learn')
     }
   }
 }

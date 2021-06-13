@@ -15,6 +15,11 @@
     "title": "Third Party Decks"
   },
   {
+    "to": "/groups",
+    "icon": "mdi-account-group",
+    "title": "Study Groups"
+  },
+  {
     "to": "/settings",
     "icon": "mdi-cog",
     "title": "Settings"

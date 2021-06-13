@@ -5,6 +5,7 @@
       :numberOfSelectedDecks="numberOfSelectedDecks"
       :learningSession="learningSession"
       :cardLimit="cardLimit"
+      :groupID="$route.params.id"
     />
   </div>
 </template>
@@ -17,7 +18,7 @@ import { Deck, LearningSession } from '../types'
 
 import LearnComponent from '../components/learn/Learn.vue'
 
-const LearnProps = Vue.extend({
+const GroupLearnProps = Vue.extend({
   props: {
     decks: { type: Array as () => Deck[] },
     learningSession: { type: Object as () => LearningSession },
@@ -31,7 +32,7 @@ const LearnProps = Vue.extend({
     LearnComponent,
   },
 })
-export default class Learn extends LearnProps {}
+export default class Learn extends GroupLearnProps {}
 </script>
 
 <style scoped>

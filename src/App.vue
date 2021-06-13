@@ -15,7 +15,11 @@
               :numberOfSelectedDecks="numberOfSelectedDecks"
               :cardLimit="cardLimit"
             />
-            <v-snackbar app v-model="snackbar.snackbar" :timeout="snackbar.timeout">
+            <v-snackbar
+              app
+              v-model="snackbar.snackbar"
+              :timeout="snackbar.timeout"
+            >
               {{ snackbar.text }}
               <template v-slot:action="{ attrs }">
                 <v-btn
@@ -23,7 +27,8 @@
                   text
                   v-bind="attrs"
                   @click="snackbar.snackbar = false"
-                >Close</v-btn>
+                  >Close</v-btn
+                >
               </template>
             </v-snackbar>
             <CustomDialog ref="customDialog" />
@@ -35,100 +40,102 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import Component from "vue-class-component";
+import Vue from 'vue'
+import Component from 'vue-class-component'
 
-import { Deck, CustomDialogOptions, Event } from "./types";
+import { Deck, CustomDialogOptions, Event } from './types'
 
-import NavigationBar from "./components/layout/NavigationBar.vue";
-import CustomDialog from "./components/customdialog/CustomDialog.vue";
-import { registerEventListenerForMainApp } from "./helpers/eventListener";
+import NavigationBar from './components/layout/NavigationBar.vue'
+import CustomDialog from './components/customdialog/CustomDialog.vue'
+import { registerEventListenerForMainApp } from './helpers/eventListener'
+import { signInToFirebase } from './helpers/studyGroupHelper'
 import {
   readFromLocalStorage,
   saveToLocalStorage,
-  SyncItem
-} from "./helpers/localStorageHelper";
-import continueCurrentLearningSessionIfPresent from "./helpers/continueLearningHelper";
+  SyncItem,
+} from './helpers/localStorageHelper'
+import continueCurrentLearningSessionIfPresent from './helpers/continueLearningHelper'
 
 const AppProps = Vue.extend({
   props: {
-    title: String
-  }
-});
+    title: String,
+  },
+})
 
 @Component({
   components: {
     NavigationBar,
-    CustomDialog
-  }
+    CustomDialog,
+  },
 })
 export default class App extends AppProps {
   propertiesToSyncWithLocalStorage = [
-    { key: "decks", defaultValue: [] },
-    { key: "cardLimit", defaultValue: "" }
-  ] as SyncItem[];
-  cardLimit = "";
-  decks = [] as Deck[];
+    { key: 'decks', defaultValue: [] },
+    { key: 'cardLimit', defaultValue: '' },
+  ] as SyncItem[]
+  cardLimit = ''
+  decks = [] as Deck[]
   snackbar = {
-    text: "",
-    snackbar: false
-  };
+    text: '',
+    snackbar: false,
+  }
 
   $refs!: {
-    navbar: NavigationBar;
-    customDialog: CustomDialog;
-  };
+    navbar: NavigationBar
+    customDialog: CustomDialog
+  }
 
   setSelectedStatusForAllDecks(status: boolean) {
-    this.decks.forEach(deck => {
-      deck.selected = status;
-    });
+    this.decks.forEach((deck) => {
+      deck.selected = status
+    })
   }
 
   created() {
-    registerEventListenerForMainApp(this);
+    registerEventListenerForMainApp(this)
+    signInToFirebase()
 
     for (const item of this.propertiesToSyncWithLocalStorage) {
       this.$watch(
         item.key,
         function() {
-          saveToLocalStorage(this, item);
+          saveToLocalStorage(this, item)
         },
         { deep: true }
-      );
+      )
     }
   }
 
   mounted() {
-    readFromLocalStorage(this);
-    this.setSelectedStatusForAllDecks(false);
+    readFromLocalStorage(this)
+    this.setSelectedStatusForAllDecks(false)
     continueCurrentLearningSessionIfPresent(
       this.$eventHub,
       this.$router,
       this.decks
-    );
+    )
   }
 
   get numberOfSelectedDecks() {
-    return this.decks.filter(deck => deck.selected).length;
+    return this.decks.filter((deck) => deck.selected).length
   }
 
   swipeLeft() {
-    if (this.$route.name === "Learn") {
-      this.$eventHub.$emit(Event.SWIPE_LEFT_IN_LEARN);
-      return;
+    if (this.$route.name === 'Learn' || this.$route.name == 'Group Learn') {
+      this.$eventHub.$emit(Event.SWIPE_LEFT_IN_LEARN)
+      return
     }
-    this.$refs.navbar.hideDrawer();
+    this.$refs.navbar.hideDrawer()
   }
   swipeRight() {
-    if (this.$route.name === "Learn") {
-      this.$eventHub.$emit(Event.SWIPE_RIGHT_IN_LEARN);
-      return;
+    if (this.$route.name === 'Learn' || this.$route.name == 'Group Learn') {
+      this.$eventHub.$emit(Event.SWIPE_RIGHT_IN_LEARN)
+      return
     }
-    this.$refs.navbar.showDrawer();
+    this.$refs.navbar.showDrawer()
   }
   showCustomDialog(options: CustomDialogOptions) {
-    this.$refs.customDialog.show(options);
+    this.$refs.customDialog.show(options)
   }
 }
 </script>
